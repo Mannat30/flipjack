@@ -613,6 +613,12 @@ or a fallback class with no instance available.
 - Spring: one toggleable bean per interface (it becomes `@Primary`); annotate component
   classes, not `@Bean` methods.
 
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md), and the
+[good first issues](https://github.com/kamranzafar/flipjack/labels/good%20first%20issue)
+to get started.
+
 ## License
 
 Copyright 2026 Kamran Zafar. Licensed under the [Apache License, Version 2.0](LICENSE).
