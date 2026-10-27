@@ -10,6 +10,11 @@
 &nbsp;
 feature toggles for Java, without the if-else
 </pre>
+
+[![Build](https://github.com/kamranzafar/flipjack/actions/workflows/build.yml/badge.svg)](https://github.com/kamranzafar/flipjack/actions/workflows/build.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/org.kamranzafar.flipjack/flipjack-core)](https://central.sonatype.com/artifact/org.kamranzafar.flipjack/flipjack-core)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+
 </div>
 
 **Flipjack:** Lightweight runtime feature toggles for Java at class and method level, _without the if-else_. Your feature code contains
@@ -25,7 +30,7 @@ a fallback, or neither.
 <dependency>
     <groupId>org.kamranzafar.flipjack</groupId>
     <artifactId>flipjack-core</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -509,13 +514,13 @@ custom source can override it to take part.
 
 ## Spring Boot
 
-Add the starter, which brings in `flipjack-core`:
+Add the starter, which brings in `flipjack-core`. It is built and tested against Spring Boot 3.5:
 
 ```xml
 <dependency>
     <groupId>org.kamranzafar.flipjack</groupId>
     <artifactId>flipjack-spring-boot-starter</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
