@@ -1,3 +1,4 @@
+```java
 /*
  * Copyright 2026 Kamran Zafar
  *
@@ -32,9 +33,12 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Runs {@link FeatureConsistency} once all singletons exist (so every toggled bean has been
- * created and a polling source has done its first load), then warns or fails startup
- * according to {@code flipjack.consistency-check}.
+ * Runs {@link FeatureConsistency} once all singletons exist.
+ *
+ * <p>This ensures that every toggled bean has been created and that a polling
+ * source has had an opportunity to perform its first load. The checker then
+ * warns or fails startup according to
+ * {@code flipjack.consistency-check}.</p>
  */
 public class FeatureConsistencyChecker implements SmartInitializingSingleton {
 
@@ -45,46 +49,90 @@ public class FeatureConsistencyChecker implements SmartInitializingSingleton {
     private final ObjectProvider<Toggled> toggledBeans;
     private final BeanFactory beanFactory;
 
-    public FeatureConsistencyChecker(FlipjackProperties properties, ObjectProvider<FeatureToggles> toggles,
-                                     ObjectProvider<Toggled> toggledBeans) {
+    /**
+     * Creates a consistency checker without a bean factory.
+     *
+     * <p>Only explicitly configured inline features and directly discoverable
+     * toggled beans are checked.</p>
+     *
+     * @param properties Flipjack configuration properties
+     * @param toggles provider for the application's feature toggle source
+     * @param toggledBeans provider for toggle-aware beans
+     */
+    public FeatureConsistencyChecker(
+            FlipjackProperties properties,
+            ObjectProvider<FeatureToggles> toggles,
+            ObjectProvider<Toggled> toggledBeans) {
         this(properties, toggles, toggledBeans, null);
     }
 
     /**
-     * With a bean factory, toggled steps held in any bean's fields are checked too.
+     * Creates a consistency checker with an optional bean factory.
+     *
+     * <p>When a bean factory is supplied, toggled steps held in fields of
+     * application beans can also be checked.</p>
+     *
+     * @param properties Flipjack configuration properties
+     * @param toggles provider for the application's feature toggle source
+     * @param toggledBeans provider for toggle-aware beans
+     * @param beanFactory bean factory used to discover additional toggled features;
+     *                    may be {@code null}
      */
-    public FeatureConsistencyChecker(FlipjackProperties properties, ObjectProvider<FeatureToggles> toggles,
-                                     ObjectProvider<Toggled> toggledBeans, BeanFactory beanFactory) {
+    public FeatureConsistencyChecker(
+            FlipjackProperties properties,
+            ObjectProvider<FeatureToggles> toggles,
+            ObjectProvider<Toggled> toggledBeans,
+            BeanFactory beanFactory) {
         this.properties = properties;
         this.toggles = toggles;
         this.toggledBeans = toggledBeans;
         this.beanFactory = beanFactory;
     }
 
+    /**
+     * Performs the feature consistency check after all singleton beans
+     * have been instantiated.
+     *
+     * <p>If consistency checking is disabled, this method returns immediately.
+     * When the toggle source cannot list its features, the check is skipped.
+     * Missing features either produce a warning or fail application startup,
+     * depending on the configured {@link ConsistencyCheck} mode.</p>
+     */
     @Override
     public void afterSingletonsInstantiated() {
         ConsistencyCheck mode = properties.getConsistencyCheck();
+
         if (mode == ConsistencyCheck.OFF) {
             return;
         }
+
         Set<String> used = new TreeSet<>(properties.getInlineFeatures());
         used.addAll(ApplicationFeatures.used(beanFactory, toggledBeans));
-        Optional<FeatureConsistencyReport> result = FeatureConsistency.check(toggles.getObject(), List.of(), used);
+
+        Optional<FeatureConsistencyReport> result =
+                FeatureConsistency.check(toggles.getObject(), List.of(), used);
+
         if (result.isEmpty()) {
-            LOG.debug("Flipjack consistency check skipped: the toggle source can't list its features "
-                    + "(or hasn't loaded yet)");
+            LOG.debug(
+                    "Flipjack consistency check skipped: the toggle source can't list its features "
+                            + "(or hasn't loaded yet)"
+            );
             return;
         }
 
         FeatureConsistencyReport report = result.get();
+
         if (!report.unusedInStore().isEmpty()) {
             LOG.info(report.describeUnused());
         }
+
         if (!report.missingFromStore().isEmpty()) {
             if (mode == ConsistencyCheck.FAIL) {
                 throw new IllegalStateException(report.describeMissing());
             }
+
             LOG.warn(report.describeMissing());
         }
     }
 }
+```
