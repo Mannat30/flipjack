@@ -20,8 +20,24 @@ Flipjack is a **well-designed, lightweight** feature-toggle library where featur
   are small and self-contained.
 - Issues labelled [`help wanted`](https://github.com/kamranzafar/flipjack/labels/help%20wanted)
   are larger; please share your plan in the issue before starting.
-- **Comment on an issue before you start**, so two people don't work on the same thing.
 - For a new idea, open an issue first to discuss it.
+
+### Claiming an issue
+
+Comment **`/assign`** on an issue to take it; it's assigned to you automatically. Put the
+command on the first line of your comment, for example `Hi! /assign`. A few rules keep things
+fair for everyone:
+
+- **One issue at a time.** You can be assigned to one open issue. Once it's closed (usually
+  when your pull request is merged), or you release it, you can take another.
+- **Already taken?** If someone else is assigned, pick another issue.
+- **Can't continue?** Comment **`/unassign`** to release the issue for someone else.
+- **Stay active.** After 10 days with no comment from you and no open pull request
+  referencing the issue, you'll get a reminder; after 14 days the issue is released. A comment
+  with a progress update, or a draft pull request, keeps it yours.
+
+Reference the issue in your pull request, for example `Fixes #12`, so it's linked and closes
+when merged.
 
 ## Building
 
