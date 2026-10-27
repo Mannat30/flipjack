@@ -36,7 +36,7 @@ Replace `1.0.0` with the version being released and `1.0.1` with the next one.
 
    ```sh
    mvn versions:set -DnewVersion=1.0.0 -DgenerateBackupPoms=false
-   # also update the <version> in README.md and the date in CHANGELOG.md
+   # also update the version in README.md (Maven and Gradle snippets) and the date in CHANGELOG.md
    git commit -am "Release 1.0.0"
    git push
    ```

@@ -13,6 +13,7 @@ feature toggles for Java, without the if-else
 
 [![Build](https://github.com/kamranzafar/flipjack/actions/workflows/build.yml/badge.svg)](https://github.com/kamranzafar/flipjack/actions/workflows/build.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/org.kamranzafar.flipjack/flipjack-core)](https://central.sonatype.com/artifact/org.kamranzafar.flipjack/flipjack-core)
+[![Java](https://img.shields.io/badge/Java-17%2B-orange?logo=openjdk)](https://adoptium.net/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
 </div>
@@ -26,12 +27,26 @@ a fallback, or neither.
 | `flipjack-core` | nothing (Java 17+) | Plain Java, or any DI container |
 | `flipjack-spring-boot-starter` | core + Spring Boot | Auto-wiring of `@Toggleable` beans and `flipjack.*` config |
 
+Maven:
+
 ```xml
 <dependency>
     <groupId>org.kamranzafar.flipjack</groupId>
     <artifactId>flipjack-core</artifactId>
     <version>1.0.0</version>
 </dependency>
+```
+
+Gradle (Kotlin DSL, `build.gradle.kts`):
+
+```kotlin
+implementation("org.kamranzafar.flipjack:flipjack-core:1.0.0")
+```
+
+Gradle (Groovy DSL, `build.gradle`):
+
+```groovy
+implementation 'org.kamranzafar.flipjack:flipjack-core:1.0.0'
 ```
 
 On Spring Boot, use the starter instead; see [Spring Boot](#spring-boot).
@@ -514,7 +529,9 @@ custom source can override it to take part.
 
 ## Spring Boot
 
-Add the starter, which brings in `flipjack-core`. It is built and tested against Spring Boot 3.5:
+Add the starter, which brings in `flipjack-core`. It is built and tested against Spring Boot 3.5.
+
+Maven:
 
 ```xml
 <dependency>
@@ -522,6 +539,18 @@ Add the starter, which brings in `flipjack-core`. It is built and tested against
     <artifactId>flipjack-spring-boot-starter</artifactId>
     <version>1.0.0</version>
 </dependency>
+```
+
+Gradle (Kotlin DSL, `build.gradle.kts`):
+
+```kotlin
+implementation("org.kamranzafar.flipjack:flipjack-spring-boot-starter:1.0.0")
+```
+
+Gradle (Groovy DSL, `build.gradle`):
+
+```groovy
+implementation 'org.kamranzafar.flipjack:flipjack-spring-boot-starter:1.0.0'
 ```
 
 Then annotate components; fallback classes are resolved as beans.
@@ -583,6 +612,100 @@ Features you check with `toggles.isEnabled(...)` directly can't be discovered; l
 Runtime changes with the default source: add `spring-cloud-starter` and Actuator, expose
 `refresh`, change the config at its source and `POST /actuator/refresh`.
 `GET /actuator/flipjack` lists every configured or annotated feature with its effective state.
+
+## Kotlin
+
+Flipjack works from Kotlin as it does from Java, with or without Spring. Feature names used
+in annotations must be compile-time constants, so keep them as `const val`:
+
+```kotlin
+object Features {
+    const val NEW_PRICING = "new-pricing"
+    const val FAST_CHECKOUT = "fast-checkout"
+    const val ORDER_EMAILS = "order-emails"
+    const val REGIONAL_TAX = "regional-tax"
+}
+```
+
+Class level, method level, and `whenDisabled`; annotation fallbacks take a `KClass`:
+
+```kotlin
+interface PricingService {
+    fun quote(cart: Cart): Money
+}
+
+@Service
+class LegacyPricing : PricingService { ... }
+
+@Service
+@Toggleable(value = Features.NEW_PRICING, fallback = LegacyPricing::class)
+class NewPricing : PricingService { ... }
+
+@Service
+class OrderService : Orders {
+
+    @Toggleable(value = Features.FAST_CHECKOUT, fallbackMethod = "standardCheckout")
+    override fun checkout(cart: Cart): Receipt { ... }
+
+    private fun standardCheckout(cart: Cart): Receipt { ... }
+
+    @Toggleable(value = Features.ORDER_EMAILS, whenDisabled = WhenDisabled.NO_OP)
+    override fun sendConfirmation(id: OrderId) { ... }
+}
+```
+
+A step inside a method, with function references wrapped in the `fun interface`:
+
+```kotlin
+fun interface TaxRule {
+    fun tax(cart: Cart): Money
+}
+
+@Service
+class CheckoutService(toggles: FeatureToggles) {
+    private val tax = ToggledFeature.either(TaxRule::class.java, Features.REGIONAL_TAX,
+        TaxRule(::regionalTax), TaxRule(::flatTax), toggles)
+
+    fun total(cart: Cart) = cart.subtotal + tax.tax(cart)
+
+    private fun regionalTax(cart: Cart): Money { ... }
+
+    private fun flatTax(cart: Cart): Money { ... }
+}
+```
+
+Without Spring, wire it with `::class.java`:
+
+```kotlin
+val toggles = PollingFeatureToggles.builder(config::loadFeatureToggles).build()
+val pricing = ToggledFeature.of(PricingService::class.java, NewPricing(), LegacyPricing(), toggles)
+```
+
+Per-user toggles in Spring, and a custom source, as lambdas:
+
+```kotlin
+@Configuration(proxyBeanMethods = false)
+class FlipjackConfig {
+    @Bean
+    fun featureContext() = FeatureContextProvider {
+        SecurityContextHolder.getContext().authentication
+            ?.let { FeatureContext.of(it.name) }
+            ?: FeatureContext.EMPTY
+    }
+}
+
+val fromEnvironment = FeatureToggles { feature -> System.getenv("FEATURE_${feature.uppercase()}") == "true" }
+```
+
+Things to know:
+
+- Kotlin classes are final by default. That's fine for toggled beans, since Flipjack proxies
+  interfaces, not classes, so no `open` or `kotlin-spring` plugin is needed for them. A
+  `@Configuration` class still needs either `proxyBeanMethods = false` or the `kotlin-spring`
+  plugin, as with any Spring Kotlin code.
+- Make a `fallbackMethod` `private`, not `internal`. Kotlin compiles `internal` functions under
+  a changed name, so the method isn't found and the proxy fails to build.
+- `suspend` functions on toggled interfaces haven't been tested.
 
 ## Design
 

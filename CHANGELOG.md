@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Documentation
+
+- Gradle (Kotlin and Groovy DSL) dependency snippets next to the Maven ones.
+- A Kotlin section with examples for class-level, method-level and step toggles, Spring
+  wiring, and Kotlin-specific notes.
+- A Java version badge.
+
 ## [1.0.0] - 2026-10-27
 
 First release.
