@@ -30,7 +30,7 @@ a fallback, or neither.
 <dependency>
     <groupId>org.kamranzafar.flipjack</groupId>
     <artifactId>flipjack-core</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
@@ -520,7 +520,7 @@ Add the starter, which brings in `flipjack-core`. It is built and tested against
 <dependency>
     <groupId>org.kamranzafar.flipjack</groupId>
     <artifactId>flipjack-spring-boot-starter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
